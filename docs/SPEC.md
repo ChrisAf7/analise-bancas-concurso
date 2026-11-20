@@ -1,6 +1,6 @@
 # SPEC — Análise empírica do comportamento de bancas de concurso
 
-> Status: **aprovada com ajustes** (descoberta em 2026-11-19; decisões do usuário em 2026-11-20). Nada foi implementado.
+> Status: **aprovada; MVP em andamento** (etapa 0 concluída e etapa 1 parcial em 2026-11-20; ver CLAUDE.md).
 > Diagrama do modelo de dados: [diagrams/data_model.png](diagrams/data_model.png).
 > Leitura recomendada: este arquivo → [DATA_MODEL.md](DATA_MODEL.md) → [ARCHITECTURE.md](ARCHITECTURE.md) → [ANALYSIS.md](ANALYSIS.md) → [DECISIONS.md](DECISIONS.md).
 
@@ -94,6 +94,13 @@ Regras derivadas desse princípio:
      detalhado ainda precisa ser extraído do edital oficial (etapa 0 do MVP).
    - Os Conhecimentos Gerais são compartilhados com outros cargos, então a deduplicação entre cadernos
      é obrigatória.
+   - **Achado na leitura do edital (2026-11-20):** para o Auditor – Área Geral, Direito Administrativo
+     não é disciplina separada. O conteúdo está nos itens 2 (Administração Pública e Direito
+     Administrativo), 5 (Licitações e contratos) e 7 (Controle e responsabilização, improbidade) dos
+     Específicos. O núcleo da prova é auditoria e controle. A taxonomia v0 está em
+     `taxonomy/dir_adm_v0.toml`. O edital oficial ainda contém uma nota interna de edição esquecida
+     ("o tem estava nos conhecimentos específicos, puxei para o geral"), o que sugere retificação provável.
+     **Acompanhar retificações.**
 3. **Cobertura do PCI para a FCC cai a quase zero depois de 2019**. Provas FCC encontradas por ano
    no acervo: 2019: 58; 2021: 1; 2022: 7; 2023: 0; 2024: 0; 2025: 0. Provas de *auditor* FCC no
    PCI vão de 2002 a 2019 (TCEs, TCMs, SEFAZs, Pref. São Luís/MA 2015 e 2018, SEFAZ-MA 2016).

@@ -106,3 +106,19 @@
 - **Decisão:** o edital e as provas recentes vêm do **site da FCC** (`concursosfcc.com.br`). As provas antigas (2013–2019) vêm da FCC quando disponíveis; senão, do PCI ou do site do órgão, com `source_document.origin` registrando a origem. O MCP do PCI é usado só como catálogo.
 - **Motivo:** fonte primária primeiro; o acervo FCC do PCI é fraco depois de 2019; o banco não depende de nenhum agregador.
 - **Coleta:** download pontual e registrado, concurso a concurso. Nada de crawler em massa sem antes ler os termos do site.
+
+## ADR-015 — Download manual dos PDFs do corpus
+**Status:** aceita (2026-11-20)
+- **Contexto:** o PCI exige CAPTCHA para baixar provas, e as páginas de concurso da FCC não listam cadernos de concursos antigos (carregam resultados por JavaScript e só publicam editais e comunicados).
+- **Decisão:** o usuário baixa à mão os cerca de 26 PDFs (prova e gabarito de 13 cadernos) para `data/inbox/Cxx/`; `python -m concurso.ingest inbox` registra hash, origem e URL. **Não** contornar CAPTCHA nem automatizar downloads no PCI.
+- **Alternativas rejeitadas:** resolver ou burlar o CAPTCHA (viola a intenção explícita do site); bancos comerciais de questões (termos de uso proíbem extração).
+- **Futuro:** para provas recentes, verificar os PDFs publicados pela FCC durante o concurso (por exemplo, o caderno do concurso-alvo após 04/04/2027).
+
+## ADR-016 — Avaliadores escolhidos no teste de fumaça
+**Status:** aceita (2026-11-20)
+- **Teste:** `python -m concurso.llm smoke` com uma questão sintética. Os três avaliadores responderam com JSON válido e com o mesmo rótulo.
+- **A:** `gemini-3.5-flash` (Google AI Studio, plano gratuito); ~50 s por chamada, provavelmente por raciocínio interno.
+- **B:** `nvidia/nemotron-3-ultra-550b-a55b:free` (OpenRouter); ~12 s.
+- **B_reserva:** `baidu/ernie-5.5-flash-preview:free`; ~3 s.
+- Os modelos Gemma, embora gratuitos, ficaram de fora como B por serem da mesma empresa do avaliador A.
+- Os IDs ficam em `config/models.toml`. Cada `annotation_run` grava o ID que o provedor devolveu.

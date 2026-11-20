@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "concurso-analise"
+version = "0.1.0"
+description = "Análise empírica do comportamento de bancas de concurso (pipeline de dados e estatística)."
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = [
+    "openai>=1.40",        # cliente do protocolo compatível com OpenAI (Gemini, OpenRouter, Ollama) — ADR-012
+    "python-dotenv>=1.0",  # lê as chaves do .env
+    "pdfplumber>=0.11",    # extração de PDF — candidata do spike (ADR-004)
+    "pymupdf>=1.24",       # extração de PDF — candidata do spike (ADR-004); sai do projeto se perder
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

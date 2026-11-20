@@ -1,7 +1,13 @@
 # Projeto: análise empírica de bancas de concurso (alvo: Auditor STC-MA no Concurso Unificado MA / FCC, prova em 04/04/2027)
 
-Fase atual: **especificação aprovada (2026-11-20); MVP ainda não implementado.** Próximo passo:
-etapa 0–1 do MVP (edital → taxonomia; spike de extração de PDF e teste das chaves gratuitas), ver docs/SPEC.md §6.
+Fase atual: **MVP em andamento.** Estado em 2026-11-20:
+- FEITO: edital oficial registrado; taxonomia `taxonomy/dir_adm_v0.toml` carregada; banco (`python -m concurso.db migrate`);
+  registro de fontes (`concurso.ingest`); cliente de IA testado com os 3 avaliadores (`python -m concurso.llm smoke`).
+- AGUARDANDO O USUÁRIO: download manual dos PDFs do corpus para `data/inbox/Cxx/` (corpus/README.md; ADR-015).
+- PRÓXIMO: `python -m concurso.ingest inbox` → spike de extração com C01–C02 (pdfplumber × PyMuPDF, ADR-004) →
+  parser FCC + verificações → features → codebook v0 → rotulagem A/B → validação → relatório.
+
+Ambiente: `.venv` (Python 3.13), projeto instalado em modo editável (`pip install -e .`). Rode módulos com `.venv/Scripts/python -m concurso.<módulo>`.
 
 Leia nesta ordem: docs/SPEC.md → docs/DATA_MODEL.md (com diagrams/data_model.png) → docs/ARCHITECTURE.md
 → docs/ANALYSIS.md → docs/DECISIONS.md. Configuração de chaves: docs/SETUP_IA.md.

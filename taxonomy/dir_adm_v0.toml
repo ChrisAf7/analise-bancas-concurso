@@ -1,0 +1,104 @@
+# Taxonomia v0 — Direito Administrativo (ADR-008).
+# Base: Edital nº 01/2026 do Concurso Unificado MA (FCC), cargo 31. Auditor – Área Geral, itens 2, 5 e 7
+# dos Conhecimentos Específicos, mais tópicos que a FCC cobra em Direito Administrativo e o edital
+# menciona de forma ampla (ex.: processo administrativo, dentro de "atos" e "responsabilização").
+# Dois níveis no MVP (disciplina → tópico). Subtópicos só depois de medir a concordância por tópico.
+
+version = "dir_adm_v0"
+
+[disciplina]
+slug = "dir_adm"
+nome = "Direito Administrativo"
+
+[[topico]]
+slug = "dir_adm.principios"
+nome = "Princípios da Administração Pública"
+descricao = "LIMPE, princípios implícitos (supremacia, indisponibilidade, razoabilidade, proporcionalidade, autotutela, motivação, segurança jurídica)."
+
+[[topico]]
+slug = "dir_adm.organizacao"
+nome = "Organização administrativa"
+descricao = "Administração direta e indireta; desconcentração e descentralização; autarquias, fundações, empresas públicas, sociedades de economia mista, agências reguladoras, consórcios; órgãos públicos; terceiro setor."
+
+[[topico]]
+slug = "dir_adm.poderes"
+nome = "Poderes administrativos"
+descricao = "Hierárquico, disciplinar, regulamentar, de polícia; uso e abuso de poder (excesso, desvio)."
+
+[[topico]]
+slug = "dir_adm.atos"
+nome = "Atos administrativos"
+descricao = "Conceito, requisitos/elementos, atributos, classificação, espécies; anulação, revogação, convalidação, cassação; discricionariedade e vinculação; mérito."
+
+[[topico]]
+slug = "dir_adm.agentes"
+nome = "Agentes públicos e regime disciplinar"
+descricao = "Cargo, emprego e função; provimento, vacância, estabilidade; direitos e deveres; regime disciplinar, PAD, responsabilidade administrativa, civil e penal do servidor; acumulação; regime previdenciário quando cobrado em Dir. Adm."
+
+[[topico]]
+slug = "dir_adm.servicos_publicos"
+nome = "Serviços públicos e delegação"
+descricao = "Conceito, princípios, formas de prestação; concessão, permissão, autorização; PPP; direitos do usuário."
+
+[[topico]]
+slug = "dir_adm.bens_publicos"
+nome = "Bens públicos e intervenção na propriedade"
+descricao = "Classificação, regime jurídico, afetação/desafetação, uso por particulares; desapropriação, servidão, requisição, tombamento, ocupação temporária, limitações."
+
+[[topico]]
+slug = "dir_adm.responsabilidade_estado"
+nome = "Responsabilidade civil do Estado"
+descricao = "Teorias, responsabilidade objetiva (art. 37 §6º CF), omissão, excludentes e atenuantes, reparação, direito de regresso."
+
+[[topico]]
+slug = "dir_adm.licitacoes"
+nome = "Licitações"
+descricao = "Princípios, modalidades, tipos/critérios de julgamento, fases, contratação direta (dispensa, inexigibilidade), planejamento das contratações. Lei 8.666/1993 (provas até 2021) e Lei 14.133/2021."
+
+[[topico]]
+slug = "dir_adm.contratos"
+nome = "Contratos administrativos"
+descricao = "Cláusulas exorbitantes, equilíbrio econômico-financeiro, alteração, execução, fiscalização e gestão, extinção, sanções, convênios."
+
+[[topico]]
+slug = "dir_adm.controle"
+nome = "Controle da Administração"
+descricao = "Controle interno, externo (Tribunais de Contas), judicial, legislativo e social; prestação e tomada de contas; Lei de Acesso à Informação quando cobrada como controle."
+
+[[topico]]
+slug = "dir_adm.improbidade"
+nome = "Improbidade administrativa"
+descricao = "Lei 8.429/1992 (e alterações da Lei 14.230/2021): atos, sanções, procedimento, prescrição, ressarcimento ao erário."
+
+[[topico]]
+slug = "dir_adm.processo_administrativo"
+nome = "Processo administrativo"
+descricao = "Lei 9.784/1999 e leis estaduais equivalentes: princípios, direitos e deveres, instrução, recursos, prazos, decadência."
+
+[[topico]]
+slug = "dir_adm.outros"
+nome = "Outros / não classificável"
+descricao = "Usar só quando nenhum tópico acima se aplica. Uma taxa alta indica lacuna na taxonomia."
+
+# Itens do edital-alvo (texto literal do edital oficial; atos oficiais não têm proteção autoral — Lei 9.610/98, art. 8º, IV).
+[[edital_item]]
+cargo = "31. Auditor – Área Geral"
+disciplina_rotulo = "Conhecimentos Específicos"
+ordem = 2
+texto = "Administração Pública e Direito Administrativo: Princípios da Administração Pública. Organização e funcionamento da Administração Pública. Atos e poderes administrativos. Agentes públicos e responsabilidade administrativa. Serviços públicos, patrimônio público e responsabilidade do Estado. Modelos de administração. Burocracia e profissionalização; gestão orientada a resultados; participação e governança; limites e contribuições de diferentes modelos na realidade brasileira."
+mapeia = ["dir_adm.principios", "dir_adm.organizacao", "dir_adm.atos", "dir_adm.poderes", "dir_adm.agentes", "dir_adm.servicos_publicos", "dir_adm.bens_publicos", "dir_adm.responsabilidade_estado"]
+fora_da_disciplina = "Modelos de administração, burocracia, gestão por resultados e governança pertencem a Administração Pública, não a Direito Administrativo."
+
+[[edital_item]]
+cargo = "31. Auditor – Área Geral"
+disciplina_rotulo = "Conhecimentos Específicos"
+ordem = 5
+texto = "Licitações, Contratos e Gestão de Recursos Públicos: Licitações e contratos administrativos. Contratação direta. Planejamento das contratações. Fiscalização e gestão contratual. Responsabilidade de agentes públicos e particulares. Controle e fiscalização da aplicação de recursos públicos."
+mapeia = ["dir_adm.licitacoes", "dir_adm.contratos", "dir_adm.controle"]
+
+[[edital_item]]
+cargo = "31. Auditor – Área Geral"
+disciplina_rotulo = "Conhecimentos Específicos"
+ordem = 7
+texto = "Controle da Administração Pública e Responsabilização: Controle interno, externo e social. Controle exercido pelos Tribunais de Contas. Prestação e tomada de contas. Irregularidades e ilícitos administrativos. Responsabilização de agentes públicos. Improbidade administrativa e ressarcimento ao erário."
+mapeia = ["dir_adm.controle", "dir_adm.improbidade", "dir_adm.agentes"]

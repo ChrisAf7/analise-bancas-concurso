@@ -17,3 +17,7 @@ node_modules/
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Instalação editável (pip install -e .)
+*.egg-info/
+build/
