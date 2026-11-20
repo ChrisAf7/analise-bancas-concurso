@@ -1,0 +1,19 @@
+# Repositório público: texto de provas, PDFs e banco NUNCA entram (ADR-013)
+data/
+
+# Chaves de API
+.env
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Node (renderização do diagrama)
+node_modules/
+
+# SO / editor
+.DS_Store
+Thumbs.db
+.vscode/

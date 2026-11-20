@@ -1,0 +1,316 @@
+Quero desenvolver neste repositório um projeto de análise de concursos públicos com foco inicial no concurso de Auditor da STC-MA.
+
+O objetivo NÃO é simplesmente criar um banco de questões ou um aplicativo de estudos. Quero construir uma base de dados e um pipeline analítico que permita estudar empiricamente o comportamento das bancas, especialmente a estrutura das questões, os padrões de cobrança e a relação entre edital, conteúdo e formulação das questões.
+
+Meu interesse principal é responder perguntas que cursinhos normalmente não respondem, por exemplo:
+
+- Em Direito, a banca cobra predominantemente teoria ou aplicação em casos concretos?
+- Qual a proporção de questões conceituais versus situações hipotéticas?
+- Como a banca estrutura os enunciados?
+- Quais tipos de comando aparecem com maior frequência?
+- Como são construídos os distratores?
+- A banca utiliza mais literalidade da lei, jurisprudência, doutrina ou aplicação prática?
+- Quais características linguísticas e estruturais aparecem recorrentemente?
+- Como esse comportamento muda por disciplina, tópico e ano?
+- O perfil da banca é diferente do perfil específico do órgão/concurso?
+- Quais características das questões deveriam influenciar minha forma de estudar?
+
+O concurso-alvo atual é Auditor da STC-MA, com FCC como banca. Entretanto, quero preservar a arquitetura para futuramente comparar FCC, FGV, Cebraspe, Vunesp, Cesgranrio etc.
+
+SUA PRIMEIRA TAREFA
+
+NÃO comece implementando o sistema.
+
+Primeiro, faça uma análise do repositório atual e depois conduza uma etapa de descoberta/arquitetura.
+
+Quero que você:
+
+1. Inspecione a estrutura atual do projeto.
+2. Identifique o que já existe e o que está faltando.
+3. Pesquise, se necessário, a documentação oficial relevante das ferramentas que já estiverem sendo utilizadas.
+4. Proponha uma arquitetura inicial para o projeto.
+5. Identifique as principais entidades e relações do domínio.
+6. Proponha o esquema inicial do banco de dados.
+7. Proponha o pipeline de ingestão e tratamento das questões.
+8. Proponha como representar os metadados estruturais das questões.
+9. Proponha quais análises estatísticas podem ser feitas posteriormente.
+10. Identifique riscos de qualidade dos dados, principalmente classificações feitas por IA.
+11. Proponha uma estratégia de validação.
+12. Proponha um MVP pequeno que permita testar se a hipótese do projeto é realmente útil antes de construir uma solução grande.
+
+Não implemente código significativo ainda.
+
+Quero primeiro um documento de especificação/decisões arquiteturais que possamos revisar antes da implementação.
+
+PRINCÍPIO FUNDAMENTAL
+
+Quero separar claramente:
+
+dados observados
+→ aquilo que pode ser extraído diretamente da prova;
+
+dados derivados
+→ aquilo que é calculado a partir dos dados observados;
+
+classificações feitas por IA
+→ interpretações produzidas por um modelo;
+
+hipóteses analíticas
+→ conclusões que ainda precisam ser testadas estatisticamente.
+
+Não quero que uma classificação feita pela IA seja tratada como fato objetivo sem registrar sua origem.
+
+Sempre que uma variável for inferida por IA, considere a possibilidade de armazenar:
+
+- valor classificado;
+- modelo utilizado;
+- versão do prompt;
+- data da classificação;
+- confiança, quando aplicável;
+- possibilidade de revisão humana.
+
+BANCO DE QUESTÕES
+
+Quero que cada questão possa ser relacionada, quando possível, a:
+
+- concurso;
+- cargo;
+- banca;
+- ano;
+- prova;
+- disciplina;
+- tópico;
+- subtópico;
+- questão original;
+- alternativas;
+- gabarito;
+- fonte.
+
+Além dessas informações tradicionais, quero estudar a estrutura da questão.
+
+Avalie a necessidade de campos como:
+
+- tipo de enunciado;
+- pergunta direta;
+- situação hipotética;
+- caso concreto;
+- aplicação prática;
+- definição conceitual;
+- interpretação normativa;
+- jurisprudência;
+- literalidade legal;
+- quantidade de palavras do enunciado;
+- quantidade de palavras das alternativas;
+- número de personagens;
+- presença de órgão público;
+- presença de datas/valores;
+- presença de negação;
+- presença de "EXCETO";
+- estrutura das alternativas;
+- tipo de distrator;
+- nível de abstração;
+- tipo de raciocínio exigido.
+
+Não assuma que todos esses campos devem necessariamente existir. Avalie quais são úteis, quais podem ser derivados e quais seriam subjetivos demais.
+
+MODELO DE DADOS
+
+Quero uma arquitetura que preserve a possibilidade de análises temporais.
+
+Por exemplo, quero poder responder futuramente:
+
+P(caso_concreto | banca = FCC, disciplina = Direito Administrativo)
+
+P(jurisprudência | banca = FCC, tópico = atos administrativos)
+
+e comparar essas proporções entre períodos:
+
+2015–2018
+2019–2022
+2023–2026
+
+Também quero conseguir separar:
+
+perfil da banca
+versus
+perfil do concurso/órgão
+versus
+perfil da disciplina
+versus
+perfil do tópico.
+
+Não quero construir métricas agora sem antes verificar se o modelo de dados suporta essas análises.
+
+FONTE DOS DADOS
+
+Considere como possíveis fontes:
+
+- provas anteriores;
+- gabaritos;
+- editais;
+- provas de concursos anteriores da mesma banca;
+- provas da mesma área/cargo;
+- outras fontes públicas relevantes.
+
+O PCI pode eventualmente ser utilizado como fonte de consulta/ingestão, inclusive via MCP se houver uma integração adequada.
+
+Porém, NÃO quero que o banco de dados dependa estruturalmente do PCI.
+
+Sempre que possível, preserve a fonte primária da prova e registre a proveniência dos dados.
+
+Se houver questões relacionadas a direitos autorais, termos de uso, scraping ou restrições de acesso, sinalize isso em vez de assumir que determinada forma de coleta é permitida.
+
+IA
+
+A IA deverá ser utilizada principalmente para tarefas como:
+
+- classificação semântica;
+- identificação de padrões estruturais;
+- extração de metadados;
+- agrupamento de questões;
+- geração de hipóteses;
+- análise exploratória;
+- auxílio à interpretação dos resultados.
+
+Não quero utilizar IA para simplesmente "inventar estatísticas".
+
+Toda estatística importante deve ser calculada diretamente a partir dos dados estruturados.
+
+Quando a IA classificar questões, quero uma arquitetura que permita posteriormente auditar uma amostra dessas classificações.
+
+ANÁLISES FUTURAS
+
+Planeje a arquitetura pensando em análises como:
+
+Incidência
+
+Frequência de questões por:
+
+- disciplina;
+- tópico;
+- subtópico;
+- banca;
+- ano.
+
+Estrutura
+
+Frequência de:
+
+- caso concreto;
+- questão conceitual;
+- jurisprudência;
+- literalidade;
+- aplicação;
+- tipos de comando;
+- tipos de distrator.
+
+Linguagem
+
+Possíveis métricas:
+
+- comprimento do enunciado;
+- comprimento das alternativas;
+- complexidade estrutural;
+- quantidade de condições;
+- quantidade de entidades/personagens;
+- uso de negação;
+- padrões recorrentes de formulação.
+
+Comparação entre bancas
+
+FCC × FGV × Cebraspe etc.
+
+Evolução temporal
+
+Identificar mudanças no padrão da banca ao longo do tempo.
+
+Perfil individual
+
+No futuro, relacionar essas características com meu histórico de erros para identificar onde tenho maior dificuldade.
+
+IMPORTANTE: NÃO OVERENGINEER
+
+Quero uma arquitetura profissional, mas adequada ao estágio atual do projeto.
+
+Não crie:
+
+- microsserviços;
+- infraestrutura distribuída;
+- Airflow;
+- Kubernetes;
+- arquitetura excessivamente complexa;
+- abstrações desnecessárias;
+- dezenas de tabelas sem necessidade.
+
+Prefiro começar com uma arquitetura simples, modular e extensível.
+
+Quero conseguir evoluir o projeto posteriormente sem precisar reescrever tudo.
+
+TECNOLOGIA
+
+Antes de escolher tecnologias, examine o repositório e o contexto existente.
+
+Minha preferência é utilizar Python para o pipeline de dados e análise.
+
+Priorize ferramentas maduras, simples e apropriadas ao problema.
+
+Se houver uma decisão tecnológica importante, apresente:
+
+1. opção recomendada;
+2. alternativas;
+3. trade-offs;
+4. motivo da escolha.
+
+Não introduza uma biblioteca apenas porque ela é popular.
+
+PROCESSO DE DESENVOLVIMENTO
+
+Quero que você trabalhe como arquiteto/engenheiro de dados experiente e não como um gerador automático de código.
+
+Antes de implementar:
+
+- investigue;
+- formule hipóteses;
+- identifique ambiguidades;
+- proponha alternativas;
+- tome decisões explícitas;
+- registre as decisões importantes.
+
+Se houver uma decisão que dependa de uma preferência minha, pergunte antes de implementá-la.
+
+Quando uma decisão puder ser tomada tecnicamente sem minha intervenção, tome a decisão e justifique.
+
+ARTEFATOS
+
+Ao final desta primeira etapa, quero que você proponha a criação de algo próximo de:
+
+docs/
+├── SPEC.md
+├── ARCHITECTURE.md
+├── DATA_MODEL.md
+├── ANALYSIS.md
+└── DECISIONS.md
+
+Não crie necessariamente todos esses arquivos se você concluir que uma estrutura menor é melhor.
+
+O objetivo é ter documentação suficiente para que uma nova sessão do Claude Code consiga entender o projeto sem depender do histórico desta conversa.
+
+CRITÉRIO DE CONCLUSÃO
+
+Considere esta etapa concluída somente quando eu tiver uma visão clara de:
+
+- qual problema estamos resolvendo;
+- quais perguntas queremos responder;
+- quais dados precisamos;
+- como os dados serão estruturados;
+- quais partes são observações versus inferências;
+- como a IA será utilizada;
+- como validaremos as classificações;
+- quais métricas serão calculadas;
+- qual será o MVP;
+- quais decisões arquiteturais foram tomadas;
+- quais decisões ainda estão em aberto.
+
+Ao terminar, NÃO implemente o MVP.
+
+Primeiro me apresente a proposta arquitetural e as decisões que precisam da minha aprovação.

@@ -1,0 +1,108 @@
+# DECISIONS — Registro de decisões arquiteturais
+
+> Formato curto de ADR. **Status:** `proposta`, `aceita` ou `substituída por ADR-NNN`.
+> Novas decisões entram no fim, com número sequencial. A partir de agora, uma decisão aceita não é
+> editada; se mudar, é substituída por uma nova ADR.
+
+## Respostas do usuário (2026-11-20)
+
+| ID | Pergunta | Resposta | Efeito |
+|---|---|---|---|
+| P0 | Qual é o concurso-alvo? | A prova da STC-MA está dentro do **Concurso Unificado do Maranhão**, com várias secretarias. A banca **FCC** foi confirmada na imprensa. | SPEC §5.2 |
+| P1 | Repositório público ou privado? | **Público** | ADR-013 |
+| P2 | Como rodar a IA? | **Só modelos gratuitos**; o usuário configura contas se for preciso | ADR-012, [SETUP_IA.md](SETUP_IA.md) |
+| P3 | Disciplina do MVP | Delegada ao Claude: **Direito Administrativo** (está nos Conhecimentos Específicos do Auditor) | SPEC §6 |
+| P4 | Rotulagem humana | **Nenhuma** | ADR-012, ARCHITECTURE §5 |
+| P5 | Base da taxonomia | Delegada: **edital oficial do Concurso Unificado MA**, conteúdo do Auditor – Área Geral | ADR-008 |
+| P6 | Análise temporal fora do MVP | Delegada: aceita | ANALYSIS §3.5 |
+| P7 | Inicializar o git | Delegada: feito (sem commit, ver pendência G1) | ADR-013 |
+| — | Fonte dos dados | Delegada: **FCC como fonte principal**, PCI opcional | ADR-014 |
+
+## Pendências pequenas (todas resolvidas em 2026-11-20)
+
+| ID | Pendência | Resolução |
+|---|---|---|
+| **G1** | E-mail pessoal visível nos commits públicos | `user.email` local deste repositório configurado com o *noreply* do GitHub |
+| **G2** | Licença | MIT (arquivo `LICENSE`, criado pelo usuário no GitHub) |
+| **K1** | Chaves gratuitas (Gemini e OpenRouter) | Criadas e salvas em `.env`, que o git ignora. Ainda falta testar as chaves no spike. |
+| — | Repositório remoto | <https://github.com/ChrisAf7/analise-bancas-concurso> (público) |
+
+---
+
+## ADR-001 — Python 3.13 com venv e pyproject.toml
+**Status:** aceita
+- **Decisão:** Python 3.13 (já instalado), ambiente `venv` da biblioteca padrão e dependências declaradas em `pyproject.toml`.
+- **Alternativas:** `uv` (rápido e maduro, mas é mais uma ferramenta); Poetry; conda (pesado; só faria sentido com dependências científicas compiladas, o que não é o caso).
+- **Motivo:** zero instalação nova, padrão e suficiente para cerca de 8 dependências. Trocar para `uv` depois é trivial, porque ele lê o mesmo `pyproject.toml`.
+
+## ADR-002 — SQLite como sistema de registro
+**Status:** aceita
+- **Decisão:** um único arquivo `data/concurso.sqlite`, acessado pelo `sqlite3` da biblioteca padrão. As análises carregam em `pandas`.
+- **Alternativas:** DuckDB (ótimo para análise colunar, mais fraco como base transacional de curadoria; consegue ler o arquivo SQLite diretamente, então pode entrar depois sem migração); PostgreSQL (exige servidor); CSV ou Parquet soltos (sem integridade nem proveniência).
+- **Motivo:** integridade (FK, CHECK, transações), um arquivo só, maturidade e zero infraestrutura.
+
+## ADR-003 — SQL puro com migrações numeradas, sem ORM
+**Status:** aceita
+- **Decisão:** `db/migrations/NNN_*.sql` aplicadas em ordem por um script curto que controla `PRAGMA user_version`.
+- **Alternativas:** SQLAlchemy com Alembic; `sqlite-utils`.
+- **Motivo:** o esquema é pequeno, e as consultas analíticas são SQL de qualquer forma.
+
+## ADR-004 — Biblioteca de extração de PDF: decidir por spike
+**Status:** proposta (decisão na etapa 1 do MVP)
+- **Candidatas:** `pdfplumber` (MIT, extração por coordenadas); `PyMuPDF` (rápida, boa com duas colunas, **licença AGPL**); `pypdf` (simples, pior com layout).
+- **Critério:** em 2 cadernos FCC reais, a fração de questões segmentadas corretamente (meta ≥ 95%), os acentos, a hifenização e a ordem das colunas. Ganha a mais simples que bater a meta.
+- **Nota (repositório público):** a AGPL do PyMuPDF obrigaria o código do projeto a ser AGPL se fosse distribuído junto. Isso pesa a favor do `pdfplumber` em caso de empate.
+
+## ADR-005 — Claude via API paga
+**Status:** substituída por ADR-012 (o usuário não quer modelo pago)
+
+## ADR-006 — Quatro camadas e anotação com proveniência
+**Status:** aceita
+- **Decisão:** dados observados, derivados, classificações e hipóteses ficam em lugares diferentes ([DATA_MODEL §2](DATA_MODEL.md)). Toda classificação é uma linha em `annotation` ligada a um `annotation_run` com provedor, modelo exato, versão do prompt, versão do codebook e data.
+- **Alternativa rejeitada:** colunas como `question.tem_cenario`. Apagaria a origem e impediria comparar modelos.
+
+## ADR-007 — O que entra no git
+**Status:** substituída por ADR-013 (repositório público)
+
+## ADR-008 — Taxonomia própria, mapeada para o edital
+**Status:** aceita
+- **Decisão:** a tabela `taxonomy_node` é versionada e tem 2 níveis no MVP (disciplina → tópico). A taxonomia v0 sai do conteúdo programático de Direito Administrativo do **Auditor – Área Geral** no edital oficial do Concurso Unificado MA (FCC, 2026). Os itens do edital ficam em `edital_item` e são mapeados para a taxonomia.
+- **Alternativas:** usar a redação do edital diretamente (impede comparar concursos); copiar a taxonomia de um banco comercial (dado de terceiros).
+
+## ADR-009 — Rotulagem humana por planilha
+**Status:** substituída por ADR-012 (não haverá rotulagem humana)
+
+## ADR-010 — PCI como catálogo, não como base
+**Status:** substituída por ADR-014
+
+## ADR-011 — Unidade de agrupamento estatístico = caderno de prova
+**Status:** aceita
+- **Decisão:** todos os IC e erros-padrão são agrupados por `prova` (caderno).
+- **Motivo:** as questões de um caderno compartilham elaboradores e estilo; tratá-las como independentes produz falsa precisão.
+
+## ADR-012 — IA só com modelos gratuitos, dois avaliadores, validação sem humano
+**Status:** aceita (2026-11-20)
+- **Contexto:** o usuário não quer modelo pago nem rotular questões.
+- **Decisão:**
+  1. Cliente único **compatível com o protocolo da OpenAI** (pacote `openai` com `base_url` configurável). Ele atende Google AI Studio, OpenRouter e Ollama sem código específico por provedor.
+  2. **Avaliador A:** Gemini no plano gratuito do Google AI Studio (sem cartão). **Avaliador B:** um modelo aberto de outra família pelo OpenRouter, só modelos `:free`. Os modelos exatos são escolhidos no spike, conforme a disponibilidade do dia, e ficam em `config/models.toml`.
+  3. Várias questões por chamada (5–10) para caber nos limites gratuitos (OpenRouter sem créditos: 20 requisições por minuto e 50 por dia).
+  4. Validação sem humano: âncoras por regra, κ entre modelos, estabilidade entre execuções e sensibilidade das conclusões (ARCHITECTURE §5).
+- **Alternativas consideradas:**
+  - *Ollama local* (gratuito, ilimitado e privado): esta máquina tem 16 GB de RAM e nenhuma GPU dedicada foi detectada, então modelos de ~8B rodariam na CPU, devagar e com qualidade menor em texto jurídico em português. Fica como **avaliador C opcional**.
+  - *Um único modelo gratuito:* mais simples, mas sem humano não haveria nenhuma medida de confiabilidade. Rejeitado.
+  - *Claude via API:* pago. Rejeitado pelo usuário.
+- **Consequências e limitações:** a concordância entre modelos mede confiabilidade, não validade, e isso é declarado em todo relatório. Os planos gratuitos podem usar as entradas para treino, o que é aceitável porque só texto de provas públicas é enviado. Os modelos gratuitos podem sumir; uma série nunca mistura modelos.
+
+## ADR-013 — Repositório público: o que entra e o que fica fora do git
+**Status:** aceita (2026-11-20)
+- **Entra:** código, docs, diagramas, codebook, prompts, migrações, testes, `config/models.toml`, `.env.example`, **rótulos exportados por chave natural da questão** (`exports/annotations/*.jsonl`, sem texto) e tabelas agregadas.
+- **Nunca entra:** `data/` inteiro (PDFs, banco SQLite com texto das questões), `.env` (chaves).
+- **Motivo:** as questões são obras da banca. Publicar só identificadores, rótulos e estatísticas mantém o projeto reprodutível, porque qualquer pessoa reconstrói o banco a partir das fontes oficiais, sem republicar provas.
+- **Pendência G1:** usar o e-mail *noreply* do GitHub nos commits.
+
+## ADR-014 — Fontes: FCC primeiro, PCI opcional
+**Status:** aceita (2026-11-20)
+- **Decisão:** o edital e as provas recentes vêm do **site da FCC** (`concursosfcc.com.br`). As provas antigas (2013–2019) vêm da FCC quando disponíveis; senão, do PCI ou do site do órgão, com `source_document.origin` registrando a origem. O MCP do PCI é usado só como catálogo.
+- **Motivo:** fonte primária primeiro; o acervo FCC do PCI é fraco depois de 2019; o banco não depende de nenhum agregador.
+- **Coleta:** download pontual e registrado, concurso a concurso. Nada de crawler em massa sem antes ler os termos do site.
