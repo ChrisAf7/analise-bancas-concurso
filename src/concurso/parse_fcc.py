@@ -11,6 +11,7 @@ Uso:
 from __future__ import annotations
 
 import csv
+import difflib
 import hashlib
 import re
 import sqlite3
@@ -186,9 +187,17 @@ class Part:
     source_id: int | None = None
 
 
-def _looks_like_heading(text: str, prev: str | None) -> bool:
+def _looks_like_heading(text: str, prev: str | None, next_is_question: bool = False) -> bool:
+    """Título de disciplina: linha curta, sem pontuação final, depois do fim de uma questão.
+
+    Aceita pelo vocabulário (_DISC_HEAD) OU, sem vocabulário, quando a linha seguinte é o início da
+    próxima questão (ex.: 'Ciências das Finanças e Direito Financeiro', que faltava no vocabulário — C08).
+    """
     t = text.strip()
-    if len(t) > 90 or t[-1:] in ".,;:?)" or not _DISC_HEAD.match(t) or len(t.split()) > 8:
+    # conta só palavras reais: "Direito Civil I , Empresarial I e Penal I" tem 8 (C12), não 9
+    if not t or len(t) > 90 or t[-1:] in ".,;:?)" or len(re.findall(r"\w+", t)) > 9 or not t[0].isupper():
+        return False
+    if not (_DISC_HEAD.match(t) or next_is_question):
         return False
     return prev is None or prev.rstrip()[-1:] in ".?)" or _RE_SEP.match(prev.strip()) is not None
 
@@ -216,8 +225,11 @@ def parse_prova(lines: list[Line], source_id: int) -> list[Part]:
             textos.append((texto_range, join_lines(texto_buf)))
         texto_buf, texto_range = None, None
 
-    for ln in lines:
+    for idx, ln in enumerate(lines):
         text = ln.text.strip()
+        nxt = lines[idx + 1].text.strip() if idx + 1 < len(lines) else ""
+        m_next = _RE_Q.match(nxt)
+        next_is_question = bool(m_next) and int(m_next.group(1)) == next_expected()
         if _RE_COVER_LINE.search(text):
             boundary_seen = True
         m_sec = _RE_SECAO.match(text)
@@ -251,7 +263,7 @@ def parse_prova(lines: list[Line], source_id: int) -> list[Part]:
                 disciplina = text
             prev = text
             continue
-        if _looks_like_heading(text, prev) and (q is None or cur_alt == "E" or closed):
+        if _looks_like_heading(text, prev, next_is_question) and (q is None or cur_alt == "E" or closed):
             disciplina = text
             finish_texto()
             closed = True
@@ -474,11 +486,68 @@ def load_corpus(conn: sqlite3.Connection, corpus_id: str, meta: dict) -> list[st
     return report
 
 
+def relabel(conn: sqlite3.Connection, corpus_id: str, restaurar: bool = False) -> list[str]:
+    """Reprocessa os PDFs e atualiza SÓ disciplina_rotulo das questões cujo texto (text_hash) não mudou.
+
+    Preserva IDs e anotações. Qualquer diferença de texto é reportada e NÃO aplicada (exige `load`).
+    """
+    changes, problems = [], []
+    provas = conn.execute("SELECT id, kind, local_path FROM source_document WHERE corpus_id=? AND kind='prova' ORDER BY id",
+                          (corpus_id,)).fetchall()
+    part_no = 0
+    with conn:
+        for d in provas:
+            for part in parse_prova(document_lines(str(RAW / d["local_path"])), d["id"]):
+                part_no += 1
+                for q in part.questions:
+                    row = conn.execute("SELECT q.id, q.disciplina_rotulo, q.text_hash FROM question q JOIN prova p ON p.id=q.prova_id "
+                                       "WHERE p.corpus_id=? AND p.parte=? AND q.numero=?", (corpus_id, part_no, q.numero)).fetchone()
+                    alts = q.alternativas()
+                    h = hashlib.sha256(normalize_for_hash(q.enunciado + " " + " ".join(alts.values())).encode()).hexdigest()
+                    if row is None:
+                        problems.append(f"{corpus_id} p{part_no} q{q.numero}: não existe no banco (não alterado)")
+                        continue
+                    if row["text_hash"] != h:
+                        # Só aceita LIMPEZA: texto novo quase idêntico e não maior que o antigo (ex.: rodapé removido).
+                        old_alts = {a["letra"]: a["texto"] for a in conn.execute(
+                            "SELECT letra, texto FROM alternative WHERE question_id=?", (row["id"],))}
+                        old_txt = conn.execute("SELECT enunciado FROM question WHERE id=?", (row["id"],)).fetchone()[0]
+                        old_all = old_txt + " " + " ".join(old_alts[k] for k in sorted(old_alts))
+                        new_all = q.enunciado + " " + " ".join(alts[k] for k in sorted(alts))
+                        sm = difflib.SequenceMatcher(None, old_all, new_all, autojunk=False)
+                        ratio = sm.ratio()
+                        ops = [o for o in sm.get_opcodes() if o[0] != "equal"]
+                        only_deletions = all(o[0] == "delete" for o in ops)
+                        removed_chars = sum(max(o[2] - o[1], o[4] - o[3]) for o in ops)
+                        # --restaurar: aceita também reinserção pequena (reparo de limpeza indevida, ex.: "TCE-CE")
+                        allowed = only_deletions or (restaurar and all(o[0] in ("delete", "insert") for o in ops))
+                        if allowed and removed_chars <= 120 and sorted(old_alts) == sorted(alts):
+                            conn.execute("UPDATE question SET enunciado=?, text_hash=? WHERE id=?", (q.enunciado, h, row["id"]))
+                            conn.executemany("UPDATE alternative SET texto=? WHERE question_id=? AND letra=?",
+                                             [(t, row["id"], k) for k, t in alts.items()])
+                            delta = len(new_all) - len(old_all)
+                            changes.append(f"{corpus_id} p{part_no} q{q.numero}: texto {'restaurado' if delta > 0 else 'limpo'} "
+                                           f"({delta:+d} caracteres, similaridade {ratio:.3f})")
+                        else:
+                            problems.append(f"{corpus_id} p{part_no} q{q.numero}: texto difere (similaridade {ratio:.3f}); NÃO alterado")
+                            continue
+                    if row["disciplina_rotulo"] != q.disciplina:
+                        conn.execute("UPDATE question SET disciplina_rotulo=? WHERE id=?", (q.disciplina, row["id"]))
+                        changes.append(f"{corpus_id} p{part_no} q{q.numero}: {row['disciplina_rotulo']} -> {q.disciplina}")
+    return changes + problems
+
+
 def main(argv: list[str]) -> None:
     sys.stdout.reconfigure(encoding="utf-8")
     conn = connect()
     migrate(conn)
-    if argv[:1] == ["load"]:
+    if argv[:1] == ["relabel"]:
+        restaurar = "--restaurar" in argv
+        ids = [a for a in argv[1:] if not a.startswith("--")] or sorted({r[0] for r in conn.execute("SELECT DISTINCT corpus_id FROM prova")})
+        for cid in ids:
+            out = relabel(conn, cid, restaurar)
+            print(f"{cid}: {len(out)} alterações" + ("".join(f"\n   {x}" for x in out[:12]) + ("\n   ..." if len(out) > 12 else "")))
+    elif argv[:1] == ["load"]:
         meta = _corpus_meta()
         ids = argv[1:] or sorted({r[0] for r in conn.execute(
             "SELECT DISTINCT corpus_id FROM source_document WHERE kind='prova' AND corpus_id IS NOT NULL")})

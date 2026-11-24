@@ -99,10 +99,13 @@ class LLMClient:
                 resp = self.client.chat.completions.create(**kwargs)
             except RateLimitError as e:          # 429: limite por minuto ou diário
                 last_error = e
-                time.sleep(min(15 * 2 ** attempt, 300))
+                wait = min(15 * 2 ** attempt, 300)
+                print(f"  [{self.rater.name}] 429 (limite do provedor); nova tentativa em {wait}s", file=sys.stderr, flush=True)
+                time.sleep(wait)
                 continue
             except (APIConnectionError, APITimeoutError) as e:
                 last_error = e
+                print(f"  [{self.rater.name}] {type(e).__name__}; nova tentativa", file=sys.stderr, flush=True)
                 time.sleep(10 * (attempt + 1))
                 continue
             except APIStatusError as e:

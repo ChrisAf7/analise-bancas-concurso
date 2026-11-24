@@ -1,0 +1,84 @@
+# Codebook v0 — variáveis de classificação (DATA_MODEL §4.1, §5).
+# O MESMO texto alimenta os dois modelos (e um eventual revisor humano). Mudou definição → nova versão.
+# Exemplos: SINTÉTICOS, escritos para o codebook (nenhum texto de prova real — ADR-013).
+
+version = "v0"
+
+[[variavel]]
+nome = "cenario"
+tipo = "unico"
+pergunta = "O enunciado narra uma situação concreta (fatos, agentes, eventos) sobre a qual a questão pergunta?"
+valores = ["sem_cenario", "cenario_hipotetico"]
+definicoes = [
+  "sem_cenario: o enunciado é abstrato — pede definição, característica, regra geral ou 'de acordo com a Lei X, ...' sem narrar fatos de um caso.",
+  "cenario_hipotetico: o enunciado narra fatos de um caso específico (mesmo sem nomes: 'determinado Município', 'um servidor estável', 'a empresa contratada') e a pergunta é sobre esse caso.",
+]
+regras = [
+  "Basta UM caso narrado no enunciado ou nas assertivas (I, II, III) para ser cenario_hipotetico.",
+  "Frases como 'Considere as afirmações abaixo' seguidas de afirmações abstratas são sem_cenario.",
+  "Mencionar um órgão real só para situar a norma ('Segundo o Regimento do Tribunal X, ...') não é cenário.",
+]
+exemplos = [
+  "Determinado Município contratou, sem licitação, show artístico de cantor consagrado. A contratação → cenario_hipotetico",
+  "Sobre os atributos do ato administrativo, é correto afirmar que → sem_cenario",
+]
+
+[[variavel]]
+nome = "demanda_cognitiva"
+tipo = "unico"
+pergunta = "O que o candidato precisa fazer, minimamente, para chegar à alternativa correta (use o gabarito)?"
+valores = ["recordar_texto", "reconhecer_conceito", "aplicar_a_fatos", "calcular_ou_contar"]
+definicoes = [
+  "recordar_texto: basta lembrar o texto de uma norma (prazo, percentual, rol, competência, requisito literal). Os fatos do enunciado, se houver, não mudam a resposta.",
+  "reconhecer_conceito: basta reconhecer uma definição, classificação ou característica doutrinária (ex.: atributos do ato, espécies de descentralização).",
+  "aplicar_a_fatos: é preciso enquadrar os fatos narrados numa regra; mudar um detalhe relevante do caso mudaria a resposta.",
+  "calcular_ou_contar: a resposta exige conta (valores, prazos somados, percentuais aplicados) ou contagem.",
+]
+regras = [
+  "Decida pela ALTERNATIVA CORRETA (gabarito): o que é necessário saber para confirmá-la?",
+  "Teste do cenário decorativo: se trocar os nomes/detalhes do caso não muda a resposta, NÃO é aplicar_a_fatos.",
+  "Entre recordar_texto e reconhecer_conceito: se a alternativa correta reproduz/parafraseia um dispositivo legal específico → recordar_texto; se é uma noção doutrinária geral → reconhecer_conceito.",
+]
+exemplos = [
+  "Caso narrado de servidor que acumulou dois cargos; a correta diz que a acumulação é vedada porque os cargos não estão no rol constitucional → aplicar_a_fatos",
+  "Caso narrado de licitação; a correta só repete o prazo legal de publicação do edital, que não depende do caso → recordar_texto",
+]
+
+[[variavel]]
+nome = "fonte_normativa"
+tipo = "multiplo"
+pergunta = "Em que fonte se apoia a alternativa correta? (uma ou mais)"
+valores = ["lei", "constituicao", "jurisprudencia", "sumula", "doutrina", "indeterminada"]
+definicoes = [
+  "lei: lei, decreto, regimento ou outro ato infraconstitucional.",
+  "constituicao: Constituição Federal ou Estadual.",
+  "jurisprudencia: entendimento de tribunal (STF, STJ, TCU...) que NÃO está escrito literalmente na lei — mesmo que o enunciado não cite o tribunal.",
+  "sumula: súmula (vinculante ou não) específica.",
+  "doutrina: construção doutrinária/conceitual sem dispositivo normativo específico.",
+  "indeterminada: não é possível identificar a fonte com segurança.",
+]
+regras = [
+  "Marque jurisprudencia só se a resposta correta depender de um entendimento jurisprudencial conhecido; não marque por palpite.",
+  "indeterminada não se combina com outros valores.",
+]
+exemplos = [
+  "A correta afirma responsabilidade objetiva do Estado por dano causado por agente (art. 37, §6º) → [constituicao]",
+  "A correta segue entendimento do STF sobre nepotismo, sem citar o tribunal → [jurisprudencia, sumula] se for a súmula vinculante; senão [jurisprudencia]",
+]
+
+[[variavel]]
+nome = "topico"
+tipo = "unico"
+pergunta = "Qual o tópico de Direito Administrativo da questão (taxonomia dir_adm_v0)? Se a questão não é de Direito Administrativo, use nao_dir_adm."
+valores = [
+  "dir_adm.principios", "dir_adm.organizacao", "dir_adm.poderes", "dir_adm.atos", "dir_adm.agentes",
+  "dir_adm.servicos_publicos", "dir_adm.bens_publicos", "dir_adm.responsabilidade_estado", "dir_adm.licitacoes",
+  "dir_adm.contratos", "dir_adm.controle", "dir_adm.improbidade", "dir_adm.processo_administrativo",
+  "dir_adm.outros", "nao_dir_adm",
+]
+definicoes = ["As descrições de cada tópico estão em taxonomy/dir_adm_v0.toml e são incluídas no prompt."]
+regras = [
+  "Escolha o tópico do conteúdo exigido pela alternativa correta, não o tema decorativo do caso.",
+  "nao_dir_adm: questões de auditoria, contabilidade, orçamento, controle interno técnico (normas de auditoria), etc.",
+]
+exemplos = []

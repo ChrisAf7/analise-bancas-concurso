@@ -13,7 +13,7 @@ import sys
 
 from .db import connect, migrate
 
-EXTRACTOR_VERSION = "feat-0.1"
+EXTRACTOR_VERSION = "feat-0.3"   # 0.2: + cita_jurisprudencia_explicita; 0.3: tem_nome_proprio_agente estrito (ADR-022)
 
 # --- vocabulário (tudo testado em tests/test_features.py) -----------------------------------
 RE_NEG_CMD = re.compile(r"\b(INCORRET[AO]S?|EXCETO|ERRAD[AO]S?|NÃO|N Ã O)\b|\bincorret[ao]s?\b")
@@ -27,9 +27,35 @@ RE_PERCENT = re.compile(r"\d\s*%")
 RE_NUMBER = re.compile(r"\b\d+[\d.,]*\b")
 RE_DISPOSITIVO = re.compile(r"\bart(igo)?s?\.?\s*\d|§|\bincisos?\b|\bLei\s+(Complementar\s+)?(n[ºo°.]?\s*)?\d|\bDecreto\b|\bEmenda Constitucional\b|\bConstituição\b", re.I)
 RE_TRIBUNAL = re.compile(r"\b(STF|STJ|TST|TSE|TCU|Supremo Tribunal|Superior Tribunal|Súmula|súmula|jurisprudência|entendimento (do|dos) (Tribunais|Tribunal))\b")
+RE_JURIS_EXPLICITA = re.compile(
+    r"\b(segundo|conforme|de acordo com|consoante|na linha d[oa]s?)\s+(o\s+|a\s+)?(entendimento|jurisprudência|orientação)\b"
+    r"|\bSúmula(\s+Vinculante)?\s*(n[ºo°.]?\s*)?\d+"
+    r"|\b(entendimento|jurisprudência|orientação)\s+(atual\s+|consolidad[ao]\s+|pacífic[ao]\s+|dominante\s+)?(do|dos|da)\s+(STF|STJ|Supremo|Superior|Tribunais Superiores|TCU)",
+    re.I)
 RE_CENARIO_FORTE = re.compile(r"situação hipotética|hipoteticamente|Considere a seguinte situação|caso concreto", re.I)
 RE_DETERMINADO = re.compile(r"\bdeterminad[oa]s?\s+(Município|Estado|órgão|servidor|servidora|empresa|autarquia|entidade|agente|cidadão|particular|sociedade|Prefeit|Secretaria|fundação)", re.I)
-RE_NOME_PROPRIO = re.compile(r"(?<![.!?]\s)(?<!^)\b[A-Z][a-zà-ú]{2,}\b(?=,?\s+(servidor|servidora|auditor|auditora|analista|técnic|prefeit|secretári|empresári|contribuinte|cidadã|cidadão|agente|ocupante|que|foi|é|era|praticou|ajuizou|celebrou|recebeu|solicitou|requereu|apresentou|deixou))")
+# Nome de pessoa como agente de um caso: "Marta, servidora ..." ou "João ajuizou ...". Versão 0.3 (a 0.2 casava
+# "Maranhão foi", "Pública é"). Exclui palavras institucionais e nomes precedidos de "de/do/da/dos/das".
+RE_NOME_CAND = re.compile(
+    r"\b([A-Z][a-zà-ú]{2,})\b(?=,\s+(servidor|servidora|auditor|auditora|analista|técnic|prefeit|secretári|empresári|"
+    r"contribuinte|cidadã|cidadão|agente|ocupante|diretor|diretora|gestor|gestora|engenheir|médic|professor|"
+    r"advogad|contador|contadora|sócio|sócia|proprietári|candidat)"
+    r"|\s+(praticou|ajuizou|celebrou|recebeu|solicitou|requereu|apresentou|deixou|tomou posse|ingressou|assumiu|"
+    r"adquiriu|contratou|foi nomead|foi aprovad|foi demitid|foi exonerad|impetrou|interpôs|alienou|doou|vendeu))")
+NAO_NOME = {"Estado", "União", "Município", "Administração", "Poder", "Lei", "Constituição", "Tribunal", "Câmara",
+            "Assembleia", "Prefeitura", "Secretaria", "Governo", "Ministério", "República", "Congresso", "Senado",
+            "Presidente", "Governador", "Prefeito", "Conselho", "Empresa", "Pública", "Público", "Federal", "Estadual",
+            "Municipal", "Autarquia", "Fundação", "Agência", "Banco", "Companhia", "Sociedade", "Receita", "Fazenda"}
+
+
+def tem_nome_proprio_agente(stem: str) -> bool:
+    for m in RE_NOME_CAND.finditer(stem):
+        nome = m.group(1)
+        before = stem[:m.start()].rstrip()
+        if nome in NAO_NOME or re.search(r"\b(de|do|da|dos|das)$", before) or not before or before[-1:] in ".!?":
+            continue                                    # início de frase é ambíguo: descarta (mas ":" introduz o caso)
+        return True
+    return False
 RE_ABSOLUTO = re.compile(r"\b(sempre|nunca|jamais|somente|exclusivamente|unicamente|qualquer hipótese|em nenhuma hipótese|todos|todas|nenhum|nenhuma|obrigatoriamente|necessariamente|independentemente)\b", re.I)
 RE_NAO = re.compile(r"\bnão\b", re.I)
 
@@ -92,9 +118,10 @@ def question_features(enunciado: str, texto_base: str | None, alts: dict[str, st
     add("tem_numero", int(bool(RE_NUMBER.search(stem))))
     add("cita_dispositivo", int(bool(RE_DISPOSITIVO.search(stem))))
     add("cita_tribunal", int(bool(RE_TRIBUNAL.search(full))))
+    add("cita_jurisprudencia_explicita", int(bool(RE_JURIS_EXPLICITA.search(stem))))   # âncora V2 (só enunciado)
     add("cenario_marcador_forte", int(bool(RE_CENARIO_FORTE.search(stem))))   # âncora de alta precisão (V2)
     add("menciona_determinado", int(bool(RE_DETERMINADO.search(stem))))
-    add("tem_nome_proprio_agente", int(bool(RE_NOME_PROPRIO.search(stem))))
+    add("tem_nome_proprio_agente", int(tem_nome_proprio_agente(stem)))
 
     for k, v in alts.items():
         add("n_palavras", alt_words[k], alt=k)

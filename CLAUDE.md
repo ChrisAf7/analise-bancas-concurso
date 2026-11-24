@@ -1,12 +1,12 @@
 # Projeto: análise empírica de bancas de concurso (alvo: Auditor STC-MA no Concurso Unificado MA / FCC, prova em 04/04/2027)
 
-Fase atual: **MVP em andamento.** Estado em 2026-11-24:
-- FEITO: edital + taxonomia `taxonomy/dir_adm_v0.toml`; 13 provas registradas (27 PDFs + gabarito manual do C11);
-  parser FCC (`python -m concurso.parse_fcc load`) → 1.280 questões, 16 partes, 100% aprovadas nas verificações;
-  features derivadas (`python -m concurso.features build`); testes (`python -m pytest tests`).
-- PRÓXIMO: codebook v0 (cenario, demanda_cognitiva, fonte_normativa, topico; mais disciplina para C10) → rotulagem A/B ×2
-  (escopo: ADR-018) → validação (ARCHITECTURE §5) → relatório.
-- Escopo da IA no MVP: 122 questões de Dir. Adm. + 40 do C10 (ADR-018). Privacidade: ADR-019.
+Fase atual: **MVP — rotulagem v0 quase completa; relatório parcial em `reports/mvp_v0.md`.** Estado em 2026-11-24:
+- FEITO: 1.280 questões extraídas (13 cadernos); features feat-0.3; codebook v0; rotulagem A×2 e B×2 (escopo de 142 questões, ADR-022);
+  validação e relatório (`python -m concurso.report`).
+- PENDENTE: A rep2 parou em 100/142 pela cota diária do Gemini (20 req/dia/modelo). Retomar com
+  `.venv/Scripts/python -m concurso.classify run A 2` e depois `python -m concurso.report`.
+- PRÓXIMO: codebook v1 (regra "fato escolhe a regra → aplicar_a_fatos"; avaliar fundir recordar + reconhecer), ADR-022.
+- Achados de método: as âncoras pegaram 3 erros do parser (C08, C12); o consenso entre modelos subestima casos de fronteira.
 
 Ambiente: `.venv` (Python 3.13), projeto instalado em modo editável (`pip install -e .`). Rode módulos com `.venv/Scripts/python -m concurso.<módulo>`.
 

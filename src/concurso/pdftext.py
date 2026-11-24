@@ -45,11 +45,19 @@ class Line:
 _FOOTER = re.compile(r"^(\d{1,3}\s+)?[A-Z]{3,}[A-Za-z]*-\S")
 
 
+_FOOTER_CODE = re.compile(r"^(\d{1,3}\s+)?[A-Z][A-Z0-9]{2,}[A-Za-z0-9]*-(Conhec|Conhecimentos|CG|CE|CB|P\d)", re.I)
+
+
 def is_noise(text: str) -> bool:
     t = text.strip()
     if not t or any(p.search(t) for p in _NOISE):
         return True
-    return bool(_FOOTER.match(t)) and len(t.split()) <= 7 and t.count("-") >= 2
+    if len(t.split()) > 7:
+        return False
+    # "TCEGO-Conhecimentos Gerais 2", "TRT5R-Conhec.Gerais 1 3", "CNMPD-Conhecimentos Básicos 2"
+    if _FOOTER_CODE.match(t) and re.search(r"\d$", t):
+        return True
+    return bool(_FOOTER.match(t)) and t.count("-") >= 2
 
 
 def _group_lines(words: list[dict], tol: float = 3.0) -> list[list[dict]]:
@@ -64,6 +72,8 @@ def _group_lines(words: list[dict], tol: float = 3.0) -> list[list[dict]]:
 
 
 def _join(words: list[dict]) -> str:
+    if len(words) > 1 and _FOOTER_WORD.match(words[0]["text"]):
+        words = words[1:]
     return " ".join(w["text"] for w in words)
 
 
@@ -72,6 +82,9 @@ GUTTER_MIN = 10.0   # pt: vão mínimo no centro para considerar que a linha tem
 # Palavras de ruído removidas ANTES de montar as linhas: o rodapé do PCI às vezes cai na mesma linha
 # do texto da questão. Inclui a marca d'água (IP e data do download em base64) e artefatos "(cid:N)".
 _NOISE_WORD = re.compile(r"pciconcursos|pcimark|\(cid:\d+\)|^[A-Za-z0-9+/]{30,}={0,2}(:[A-Za-z0-9+/]+=*)?$", re.I)
+# Código de rodapé colado no início de um título na mesma linha ("PMSLA-Conhec.Gerais1 Administração ...").
+# Só "-Conhec…" e só como PRIMEIRA palavra da linha: siglas reais como "TCE-CE" não podem casar (bug corrigido em 2026-11-24).
+_FOOTER_WORD = re.compile(r"^[A-Z][A-Z0-9]{2,}-Conhec\S*$")
 
 
 def _spans_center(row: list[dict], mid: float) -> bool:
@@ -107,17 +120,16 @@ def page_lines(page, page_no: int) -> list[Line]:
     def flush():
         for col in ("L", "R"):
             for row in _group_lines(band_words[col]):
-                txt = _join(row)
-                if not is_noise(txt):
-                    out.append(Line(page_no, txt, False, col, row[0]["top"]))
+                if is_noise(" ".join(w["text"] for w in row)):   # testa a linha INTEIRA antes de limpar o código
+                    continue
+                out.append(Line(page_no, _join(row), False, col, row[0]["top"]))
             band_words[col] = []
 
     for row in rows:
         if round(row[0]["top"]) in full_set:
             flush()
-            txt = _join(row)
-            if not is_noise(txt):
-                out.append(Line(page_no, txt, True, "F", row[0]["top"]))
+            if not is_noise(" ".join(w["text"] for w in row)):
+                out.append(Line(page_no, _join(row), True, "F", row[0]["top"]))
         else:
             for w in row:
                 band_words["L" if (w["x0"] + w["x1"]) / 2 < mid else "R"].append(w)

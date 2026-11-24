@@ -16,8 +16,20 @@ def test_ruido_marca_dagua_e_rodape():
     assert is_noise("www.pciconcursos.com.br")
     assert is_noise("8 SEFAZ-AFRE-Adm.Tributária-CG 1 -P1-S01")
     assert is_noise("PMSLA-ACI-Abrangência Geral-A01-CE 13")
+    assert is_noise("TCEGO-Conhecimentos Gerais 2")
+    assert is_noise("TRT5R-Conhec.Gerais 1 3")
+    assert is_noise("CNMPD-Conhecimentos Básicos 2")
     assert not is_noise("Direito Administrativo")
+    assert not is_noise("Ciências das Finanças e Direito Financeiro")
     assert not is_noise("TCE-PI determinou a abertura de processo de tomada de contas especial contra o gestor.")
+
+
+def test_rodape_colado_em_titulo_sem_apagar_siglas():
+    from concurso.pdftext import _join
+    w = lambda t: {"text": t}  # noqa: E731
+    assert _join([w("PMSLA-Conhec.Gerais1"), w("Administração"), w("Financeira")]) == "Administração Financeira"
+    assert _join([w("O"), w("TCE-CE"), w("emitiu")]) == "O TCE-CE emitiu"       # regressão de 2026-11-24
+    assert _join([w("TCE-CE"), w("emitiu")]) == "TCE-CE emitiu"
 
 
 def test_gabarito_pares_com_blocos_e_rotulos():
@@ -48,6 +60,29 @@ def test_comando_e_formato():
     alts = {k: "texto qualquer da alternativa." for k in "ABCDE"}
     assert comando_tipo("Sobre o tema, assinale a alternativa INCORRETA.", alts) == "assinale_incorreta"
     assert comando_tipo("Em decorrência do fato narrado, o Município", alts) == "completar_frase"
+
+
+def test_ancora_jurisprudencia_estrita():
+    from concurso.features import RE_JURIS_EXPLICITA as R
+    assert R.search("Segundo o entendimento do STF, a nomeação de parente")
+    assert R.search("Nos termos da Súmula Vinculante nº 13,")
+    assert R.search("conforme jurisprudência consolidada do STJ")
+    assert not R.search("O TCU julgou as contas do gestor")          # instituição, não jurisprudência
+    assert not R.search("São fontes: I. lei. II. jurisprudência. III. costumes.")
+
+
+def test_nome_proprio_agente_estrito():
+    from concurso.features import tem_nome_proprio_agente as f
+    assert f("Considere a situação: Marta, servidora estável, requereu licença.")
+    assert f("No caso narrado, o servidor João ajuizou ação contra o Município.")
+    assert not f("Servidor público do Estado do Maranhão foi exonerado de ofício.")   # regressão feat-0.2
+    assert not f("Considere: I. Empresa Pública é pessoa jurídica de direito privado.")
+    assert not f("Marta, servidora, requereu licença.")      # início de frase: ambíguo, descartado
+
+
+def test_titulo_com_virgula():
+    from concurso.parse_fcc import _looks_like_heading
+    assert _looks_like_heading("Direito Civil I , Empresarial I e Penal I", "outra autoridade, que pode revogá-lo.", True)
 
 
 def test_features_basicas():

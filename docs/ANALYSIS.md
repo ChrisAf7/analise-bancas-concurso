@@ -143,10 +143,10 @@ registro (§6) e só é afirmado depois de testado em dados novos (outras provas
 
 | ID | Hipótese | Variável e teste | Origem | Status |
 |---|---|---|---|---|
-| H-001 | Em Dir. Adm., a maioria das questões FCC com cenário exige apenas recordar texto legal (cenário decorativo) | `cenario` × `demanda_cognitiva`; proporção com IC agrupado | briefing (Q1) | proposta |
-| H-002 | A alternativa correta da FCC **não** é mais longa que as demais com frequência acima do acaso (1/5) | `correta_e_mais_longa`; teste binomial | folclore de concurso | proposta |
+| H-001 | Em Dir. Adm., a maioria das questões FCC com cenário exige apenas recordar texto legal (cenário decorativo) | `cenario` × `demanda_cognitiva`; proporção com IC agrupado | briefing (Q1) | **inconclusiva** (MVP v0: A 22% [11–30], B 53% [27–72]; depende da fronteira do codebook → v1) |
+| H-002 | A alternativa correta da FCC **não** é mais longa que as demais com frequência acima do acaso (1/5) | `correta_e_mais_longa`; teste binomial | folclore de concurso | **confirmada** no corpus MVP: 20% [17–24], n=745, p=0,78 |
 | H-003 | Provas FCC de órgãos de controle cobram mais jurisprudência e TCU que outras provas FCC na mesma disciplina | `fonte_normativa` ~ `tipo_órgão`; GLM agrupado | Q9 | proposta |
-| H-004 | As letras do gabarito são equilibradas por prova | χ² de uniformidade | Q3 | proposta |
+| H-004 | As letras do gabarito são equilibradas por prova | χ² de uniformidade | Q3 | **confirmada** no agregado: A 261, B 250, C 255, D 260, E 254; χ²=0,32, p=0,99 |
 | H-005 | O perfil estrutural da prova da STC-MA 2013 (FGV) difere do perfil FCC em órgãos de controle na mesma disciplina | `cenario`, `demanda_cognitiva` ~ banca, dentro de `tipo_órgão = controle` | Q9 (fase 2) | proposta |
 
 Status possíveis: `proposta` → `registrada` (método fixado antes dos dados) → `testada` (com resultado

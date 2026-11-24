@@ -13,7 +13,7 @@ from .config import DB_PATH, MIGRATIONS
 
 def connect(path: Path = DB_PATH) -> sqlite3.Connection:
     path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(path)
+    conn = sqlite3.connect(path, timeout=60)   # timeout: avaliadores A e B gravam em paralelo
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
