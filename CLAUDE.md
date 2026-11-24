@@ -1,11 +1,12 @@
 # Projeto: análise empírica de bancas de concurso (alvo: Auditor STC-MA no Concurso Unificado MA / FCC, prova em 04/04/2027)
 
-Fase atual: **MVP em andamento.** Estado em 2026-11-20:
-- FEITO: edital oficial registrado; taxonomia `taxonomy/dir_adm_v0.toml` carregada; banco (`python -m concurso.db migrate`);
-  registro de fontes (`concurso.ingest`); cliente de IA testado com os 3 avaliadores (`python -m concurso.llm smoke`).
-- AGUARDANDO O USUÁRIO: download manual dos PDFs do corpus para `data/inbox/Cxx/` (corpus/README.md; ADR-015).
-- PRÓXIMO: `python -m concurso.ingest inbox` → spike de extração com C01–C02 (pdfplumber × PyMuPDF, ADR-004) →
-  parser FCC + verificações → features → codebook v0 → rotulagem A/B → validação → relatório.
+Fase atual: **MVP em andamento.** Estado em 2026-11-24:
+- FEITO: edital + taxonomia `taxonomy/dir_adm_v0.toml`; 13 provas registradas (27 PDFs + gabarito manual do C11);
+  parser FCC (`python -m concurso.parse_fcc load`) → 1.280 questões, 16 partes, 100% aprovadas nas verificações;
+  features derivadas (`python -m concurso.features build`); testes (`python -m pytest tests`).
+- PRÓXIMO: codebook v0 (cenario, demanda_cognitiva, fonte_normativa, topico; mais disciplina para C10) → rotulagem A/B ×2
+  (escopo: ADR-018) → validação (ARCHITECTURE §5) → relatório.
+- Escopo da IA no MVP: 122 questões de Dir. Adm. + 40 do C10 (ADR-018). Privacidade: ADR-019.
 
 Ambiente: `.venv` (Python 3.13), projeto instalado em modo editável (`pip install -e .`). Rode módulos com `.venv/Scripts/python -m concurso.<módulo>`.
 

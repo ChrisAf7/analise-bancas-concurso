@@ -11,9 +11,11 @@ requires-python = ">=3.11"
 dependencies = [
     "openai>=1.40",        # cliente do protocolo compatível com OpenAI (Gemini, OpenRouter, Ollama) — ADR-012
     "python-dotenv>=1.0",  # lê as chaves do .env
-    "pdfplumber>=0.11",    # extração de PDF — candidata do spike (ADR-004)
-    "pymupdf>=1.24",       # extração de PDF — candidata do spike (ADR-004); sai do projeto se perder
+    "pdfplumber>=0.11",    # extração de PDF (ADR-004: venceu o spike; licença MIT)
 ]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

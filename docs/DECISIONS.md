@@ -48,10 +48,13 @@
 - **Motivo:** o esquema é pequeno, e as consultas analíticas são SQL de qualquer forma.
 
 ## ADR-004 — Biblioteca de extração de PDF: decidir por spike
-**Status:** proposta (decisão na etapa 1 do MVP)
+**Status:** aceita (2026-11-24) — **pdfplumber**. Resultado do spike no fim desta ADR.
 - **Candidatas:** `pdfplumber` (MIT, extração por coordenadas); `PyMuPDF` (rápida, boa com duas colunas, **licença AGPL**); `pypdf` (simples, pior com layout).
 - **Critério:** em 2 cadernos FCC reais, a fração de questões segmentadas corretamente (meta ≥ 95%), os acentos, a hifenização e a ordem das colunas. Ganha a mais simples que bater a meta.
 - **Nota (repositório público):** a AGPL do PyMuPDF obrigaria o código do projeto a ser AGPL se fosse distribuído junto. Isso pesa a favor do `pdfplumber` em caso de empate.
+- **Resultado (2026-11-24):** as duas bibliotecas acertam quando a página é cortada por colunas. O pdfplumber dá texto mais limpo (sem recuo), leva 0,14 s por página (suficiente) e tem licença MIT. O PyMuPDF saiu das dependências.
+- **Como a ordem de leitura é resolvida (`src/concurso/pdftext.py`):** palavras com coordenadas; a página é de coluna única se a maioria das linhas não tiver vão no centro; nas páginas de duas colunas, as linhas que atravessam o centro (títulos centralizados) dividem a página em faixas, lidas esquerda → direita. Os separadores `____` são ignorados nesse teste.
+- **Resultado no corpus:** 13 cadernos, 16 partes, **1.280 questões, 100% aprovadas nas verificações estruturais** (numeração contínua, A–E completas, contagem igual à da capa e à do gabarito).
 
 ## ADR-005 — Claude via API paga
 **Status:** substituída por ADR-012 (o usuário não quer modelo pago)
@@ -122,3 +125,23 @@
 - **B_reserva:** `baidu/ernie-5.5-flash-preview:free`; ~3 s.
 - Os modelos Gemma, embora gratuitos, ficaram de fora como B por serem da mesma empresa do avaliador A.
 - Os IDs ficam em `config/models.toml`. Cada `annotation_run` grava o ID que o provedor devolveu.
+
+## ADR-017 — Gabarito do C11 transcrito à mão
+**Status:** aceita (2026-11-24)
+- **Contexto:** o gabarito do C11 (Pref. São Luís 2018) no PCI é só imagem.
+- **Decisão:** transcrever as 100 respostas do bloco A01 para `corpus/gabaritos_manuais/C11.txt` (versionado: respostas oficiais são dado público, não texto de questão). O parser prefere a transcrição manual quando ela existe e grava `prova.gabarito_origem` com o caminho dela.
+- **Alternativa rejeitada:** OCR (Tesseract ou similar), uma dependência nova para um único arquivo.
+- **Validação:** a contagem bate com as 100 questões extraídas. A conferência letra a letra ainda depende de uma segunda fonte; risco registrado.
+
+## ADR-018 — Escopo da classificação por IA no MVP
+**Status:** aceita (2026-11-24)
+- **Corpus extraído:** 1.280 questões, sendo 559 de disciplinas jurídicas e **122 de Direito Administrativo**, pelos rótulos observados "Direito Administrativo", "Direito Administrativo I" e "Noções de Direito Administrativo".
+- **Decisão:** o MVP classifica por IA as 122 questões de Direito Administrativo, mais as 40 questões sem título de disciplina dos Conhecimentos Específicos do C10. Nessas 40, a IA também rotula a disciplina e só as de Direito Administrativo entram na análise. São cerca de 160 questões, dentro da meta de 150–250 (SPEC §6).
+- **Fase seguinte:** as 559 questões jurídicas, para responder Q1 ("em Direito…") de forma geral.
+- **Features derivadas** valem para todas as 1.280 questões desde já (`python -m concurso.features build`).
+- **Achado que afeta a validação (V2):** o marcador explícito de cenário ("situação hipotética") aparece em só 0,4% das questões; a FCC monta cenários com "determinado Município…" e nomes próprios. As âncoras de cenário terão poucos casos. Por isso o V2 usará também âncoras de comando e formato (derivadas, alta precisão) e de fonte normativa (citação de tribunal ou dispositivo).
+
+## ADR-019 — Marca d'água do PCI contém dado pessoal
+**Status:** aceita (2026-11-24)
+- **Achado:** cada PDF baixado do PCI traz uma marca oculta `pcimarkpci <base64>` com o **endereço IP e a data e hora do download** de quem baixou.
+- **Decisão:** (1) os PDFs nunca entram no git, como já previa o ADR-013; (2) a marca, o rodapé do PCI e os artefatos `(cid:N)` são removidos palavra por palavra na extração (`pdftext._NOISE_WORD`), antes de qualquer outro estágio, e nunca chegam ao banco nem a um LLM; (3) uma verificação confirmou 0 ocorrências no banco após a carga.

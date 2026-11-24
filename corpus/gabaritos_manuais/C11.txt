@@ -1,0 +1,17 @@
+# Gabarito transcrito manualmente (ADR-017): o PDF oficial do C11 é só imagem, sem camada de texto.
+# Fonte: corpus C11 — gabarito "Conhec Gerais / Conhec Específicos I", página 1 do PDF registrado.
+# Transcrição: Claude (Claude Code), 2026-11-24, a partir da imagem renderizada a 110 dpi.
+# Validação: a contagem de respostas tem de bater com a de questões extraídas da prova (100).
+Conhec Gerais / Conhec Específicos I
+Cargo ou opção A01 - AUDITOR FISCAL TRIBUTOS I - ABRANGÊNCIA GERAL
+Tipo gabarito 1
+001 - E 011 - E 021 - A 031 - D 041 - E 051 - D 061 - C 071 - D 081 - B 091 - D
+002 - C 012 - A 022 - E 032 - E 042 - B 052 - E 062 - A 072 - E 082 - A 092 - B
+003 - D 013 - C 023 - D 033 - B 043 - D 053 - A 063 - B 073 - C 083 - E 093 - C
+004 - C 014 - E 024 - B 034 - D 044 - E 054 - E 064 - C 074 - A 084 - C 094 - A
+005 - D 015 - B 025 - C 035 - C 045 - A 055 - C 065 - A 075 - D 085 - D 095 - E
+006 - A 016 - C 026 - D 036 - D 046 - D 056 - B 066 - B 076 - E 086 - A 096 - C
+007 - A 017 - E 027 - C 037 - B 047 - C 057 - D 067 - E 077 - B 087 - C 097 - D
+008 - B 018 - A 028 - A 038 - D 048 - C 058 - A 068 - D 078 - C 088 - A 098 - D
+009 - D 019 - B 029 - E 039 - E 049 - B 059 - D 069 - B 079 - D 089 - E 099 - E
+010 - D 020 - D 030 - B 040 - A 050 - A 060 - E 070 - A 080 - A 090 - B 100 - A

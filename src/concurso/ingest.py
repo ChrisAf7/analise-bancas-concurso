@@ -52,8 +52,8 @@ def register(conn: sqlite3.Connection, path: Path, kind: str, origin: str, url: 
 
 def guess_kind(filename: str) -> str:
     name = filename.lower()
-    if "gabarito" in name:
-        return "gabarito"
+    if name.startswith("gab"):
+        return "gabarito_preliminar" if "preliminar" in name else "gabarito"
     if "edital" in name:
         return "edital"
     return "prova"
